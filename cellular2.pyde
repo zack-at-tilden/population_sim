@@ -86,7 +86,7 @@ def badgerAI(x,y):
         b1 += 1
         
    
-    scene[x1][y1] = ((d1,b1,l1,db1,bb1,lb1,v1))
+    scene[x1][y1] = ((d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1))
     
 
 def distribute_food(amount):
