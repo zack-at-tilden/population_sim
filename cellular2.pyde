@@ -15,8 +15,8 @@ def matrix2(x,y):
     out.append([0])
     
   return(out)
-w = 500 #width of matrix
-h = 500 #height of matrix
+w = 100 #width of matrix
+h = 100 #height of matrix
 
 pw = 1000 #width of display
 ph = 1000 #height of display
@@ -33,6 +33,8 @@ cw = w/foodChunkWidth
 ch = h/foodChunkHeight
 foodC = matrix2(foodChunkWidth,foodChunkHeight)
 scene = matrix(w,h)
+searchR = 10
+
 
 
 
@@ -70,11 +72,62 @@ def inr(x,y):
     return(x,y)
 
 
+
+def badger_search(x,y): #highly inefficient test search
+    global scene
+    closest = (None,None)
+    rp = (0,0)
+    cdist = 0
+    for rx in range(searchR*2):
+        for ry in range(searchR*2):
+            cx = searchR-rx
+            cy = searchR-ry
+            
+            ax = x + cx
+            ay = y + cy
+            
+            ax,ay = inr(ax,ay)
+            
+            d,b,l,db,bb,lb,v,ld,lb,ll = scene[ax][ay]
+            l += 1
+            scene[ax][ay] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+            if d+db > 0:
+                clx,cly = closest
+                if clx == None:
+                    closest = (ax,ay)
+                    cdist = ax**2 + ay**2
+                    rp = (cx,cy)
+                    
+                else:
+                    cdist1 = ax**2 + ay**2
+                    
+                    if cdist1 < cdist:
+                        closest = (ax,ay)
+                        cdist = ax**2 + ay**2
+                        rp = (cx,cy)
+        #
+    
+    rpx,rpy = rp
+    mx= 0
+    my = 0
+    if rpx != 0:
+        mx = rpx/abs(rpx)
+    if rpy != 0:    
+        my = rpy/abs(rpy)
+    return(mx,my)
+    
+        
+
+
+
 def badgerAI(x,y):
     global scene
     d,b,l,db,bb,lb,v,ld,lb,ll= scene[x][y]
-    x1 = x+ r.randint(-1,1)
-    y1 = y + r.randint(-1,1)
+    
+    mx,my = badger_search(x,y)
+    x1 = x+ mx
+    y1 = y + my
+    
     x1,y1 = inr(x1,y1)
     b -=1
     scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
@@ -132,7 +185,8 @@ def run_ai():
             d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
             v += 1
             scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
-
+            
+    
             
                         
                                                 
