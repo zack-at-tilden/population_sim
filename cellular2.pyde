@@ -15,8 +15,8 @@ def matrix2(x,y):
     out.append([0])
     
   return(out)
-w = 100 #width of matrix
-h = 100 #height of matrix
+w = 50 #width of matrix
+h = 50 #height of matrix
 
 pw = 1000 #width of display
 ph = 1000 #height of display
@@ -33,10 +33,10 @@ cw = w/foodChunkWidth
 ch = h/foodChunkHeight
 foodC = matrix2(foodChunkWidth,foodChunkHeight)
 scene = matrix(w,h)
-searchR = 10
+searchR = 5
 
 
-
+rpf = 0
 
 def getFoodChunk(x,y):
     xpos = floor(x/cw)
@@ -55,9 +55,9 @@ def distributeBadgers(amount):
     for i in range(amount):
         x = r.randint(0,w-1)
         y = r.randint(0,h-1)
-        d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
+        d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
         b += 1
-        scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+        scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
 
 
 def inr(x,y):
@@ -88,9 +88,9 @@ def badger_search(x,y): #highly inefficient test search
             
             ax,ay = inr(ax,ay)
             
-            d,b,l,db,bb,lb,v,ld,lb,ll = scene[ax][ay]
-            l += 1
-            scene[ax][ay] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+            d,b,l,db,bb,lb,v,ld,lab,ll = scene[ax][ay]
+            #l += 1
+            scene[ax][ay] = (d,b,l,db,bb,lb,v,ld,lab,ll)
             if d+db > 0:
                 clx,cly = closest
                 if clx == None:
@@ -100,8 +100,8 @@ def badger_search(x,y): #highly inefficient test search
                     
                 else:
                     cdist1 = ax**2 + ay**2
-                    
-                    if cdist1 < cdist:
+                    #print(searchR-rx,searchR-ry)
+                    if cdist1 < cdist and r.randint(0,1) == 1:
                         closest = (ax,ay)
                         cdist = ax**2 + ay**2
                         rp = (cx,cy)
@@ -121,24 +121,29 @@ def badger_search(x,y): #highly inefficient test search
 
 
 def badgerAI(x,y):
-    global scene
-    d,b,l,db,bb,lb,v,ld,lb,ll= scene[x][y]
+    #print("ai ran",r.randint(0,5))
+    global scene,rpf
+    rpf += 1
+    d,b,l,db,bb,lb,v,ld,lab,ll= scene[x][y]
     
     mx,my = badger_search(x,y)
-    x1 = x+ mx
+    x1 = x + mx
     y1 = y + my
     
     x1,y1 = inr(x1,y1)
+    #print(mx,my)
     b -=1
-    scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+    if d > 0:
+        d-=1
+    scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
     d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1 = scene[x1][y1]
     
     if v1 < v:
-        db1 += 1
+        bb1 += 1
     else:
         b1 += 1
         
-   
+    
     scene[x1][y1] = ((d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1))
     
 
@@ -147,60 +152,83 @@ def distribute_food(amount):
     for i in range(amount):
         x = r.randint(0,w-1)
         y = r.randint(0,h-1)
-        d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
+        d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
         
-        d += 1
+        d += 10
         
         
-        scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+        scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
         
         
 def render_matrix():
     for x in range(w):
         for y in range(h):
-            d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
+            d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
             scl = 0
             if (d+b+l) != 0:
-                scl = 255/(d+b+l)
+                scl = 255/(d+(b+bb)+l)
             fill(d*scl,b*scl,l*scl)
+            
             rect(x*rx,y*ry,rx,ry)
 
 
 def re_add_buffers(x,y):
-    d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
+    global scene
+    d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
     d += db
     b += bb
     l += lb
-    scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+    
+    scene[x][y] = (d,b,l,0,0,0,v,ld,lab,ll)
     
 def run_ai():
+    global scene
     for x in range(w):
         for y in range(h):
-            d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
+            d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
             
             
             for i in range(b):
                 badgerAI(x,y)
+                
             re_add_buffers(x,y)
-            d,b,l,db,bb,lb,v,ld,lb,ll = scene[x][y]
+            d,b,l,db,bb,lb,v,lad,lb,ll = scene[x][y]
             v += 1
-            scene[x][y] = (d,b,l,db,bb,lb,v,ld,lb,ll)
+            scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
             
     
+
             
-                        
+def smc(sx,sy): #screen to matrix coordinate converter
+    mx = int(round(sx/rx))
+    my = int(round(sy/ry))
+    mx,my = inr(mx,my)
+    return(mx,my)
+                                                
+def mouseClicked():
+    mx,my = smc(mouseX,mouseY)
+    d,b,l,db,bb,lb,v,ld,lb,ll = scene[mx][my]
+    b += 1
+    scene[mx][my] = (d,b,l,db,bb,lb,v,ld,lb,ll)    
                                                 
 def setup():
     size(500,500)
+    frameRate(2)
     distribute_food(100)
     render_matrix()
 
 
 def draw():
-    distribute_food(1)
-    distributeBadgers(1)
-    render_matrix()
+    global rpf
+    print(rpf)
+    rpf = 0
+    #distribute_food(5)
+    #distributeBadgers(1)
+    
     #print(getFoodChunk(10,10))
+    
     run_ai()
+    #print(tx,ty)
+    render_matrix()
     pass
     
