@@ -101,7 +101,11 @@ def badger_search(x,y): #highly inefficient test search
                 else:
                     cdist1 = ax**2 + ay**2
                     #print(searchR-rx,searchR-ry)
-                    if cdist1 < cdist and r.randint(0,1) == 1:
+                    if cdist1 < cdist:
+                        closest = (ax,ay)
+                        cdist = cdist1
+                        rp = (cx,cy)
+                    if cdist1 == cdist and r.randint(0,2) == 1:
                         closest = (ax,ay)
                         cdist = ax**2 + ay**2
                         rp = (cx,cy)
@@ -175,9 +179,15 @@ def render_matrix():
         for y in range(h):
             d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
             scl = 0
-            if (d+b+l) != 0:
-                scl = 255/(d+(b+bb)+l)
-            fill(d*scl,b*scl,l*scl)
+            #if (d+b+l) != 0:
+            #    scl = 255/(d+(b+bb)+l)
+                
+            if b > 0:
+                fill(0,255,0)
+            elif d > 0:
+                fill(255,0,0)
+            else:
+                fill(0)
             
             rect(x*rx,y*ry,rx,ry)
             
@@ -228,6 +238,7 @@ def mouseClicked():
 def setup():
     size(500,500)
     frameRate(20)
+    noStroke()
     distribute_food(1000)
     render_matrix()
 
