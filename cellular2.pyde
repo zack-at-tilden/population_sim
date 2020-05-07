@@ -15,8 +15,8 @@ def matrix2(x,y):
     out.append([0])
     
   return(out)
-w = 50 #width of matrix
-h = 50 #height of matrix
+w = 250 #width of matrix
+h = 250 #height of matrix
 
 pw = 1000 #width of display
 ph = 1000 #height of display
@@ -101,7 +101,11 @@ def badger_search(x,y): #highly inefficient test search
                 else:
                     cdist1 = ax**2 + ay**2
                     #print(searchR-rx,searchR-ry)
-                    if cdist1 < cdist and r.randint(0,1) == 1:
+                    if cdist1 < cdist:
+                        closest = (ax,ay)
+                        cdist = cdist1
+                        rp = (cx,cy)
+                    if cdist1 == cdist and r.randint(0,2) == 1:
                         closest = (ax,ay)
                         cdist = ax**2 + ay**2
                         rp = (cx,cy)
@@ -122,7 +126,10 @@ def badger_search(x,y): #highly inefficient test search
 
 def badgerAI(x,y):
     #print("ai ran",r.randint(0,5))
+    
     global scene,rpf
+    #fill(255)
+    #rect(x*rx,y*ry, 5,5)
     rpf += 1
     d,b,l,db,bb,lb,v,ld,lab,ll= scene[x][y]
     
@@ -132,19 +139,26 @@ def badgerAI(x,y):
     
     x1,y1 = inr(x1,y1)
     #print(mx,my)
+    
+    
     b -=1
     if d > 0:
         d-=1
     scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
     d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1 = scene[x1][y1]
     
-    if v1 < v:
+    if x1 > x or y1 > y:
         bb1 += 1
     else:
         b1 += 1
+    #if v1 < v:
+    #    bb1 += 1
+    #else:
+     #   b1 += 1
         
+    #b1 += 1
     
-    scene[x1][y1] = ((d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1))
+    scene[x1][y1] = (d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1)
     
 
 def distribute_food(amount):
@@ -165,13 +179,19 @@ def render_matrix():
         for y in range(h):
             d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
             scl = 0
-            if (d+b+l) != 0:
-                scl = 255/(d+(b+bb)+l)
-            fill(d*scl,b*scl,l*scl)
+            #if (d+b+l) != 0:
+            #    scl = 255/(d+(b+bb)+l)
+                
+            if b > 0:
+                fill(0,255,0)
+            elif d > 0:
+                fill(255,0,0)
+            else:
+                fill(0)
             
             rect(x*rx,y*ry,rx,ry)
-
-
+            
+            
 def re_add_buffers(x,y):
     global scene
     d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
@@ -190,11 +210,15 @@ def run_ai():
             
             for i in range(b):
                 badgerAI(x,y)
-                
+                #print(x,y)
+            
+           # if b != 0:
+            #    print(b)    
             re_add_buffers(x,y)
             d,b,l,db,bb,lb,v,lad,lb,ll = scene[x][y]
             v += 1
             scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
+    #print("end")
             
     
 
@@ -213,22 +237,23 @@ def mouseClicked():
                                                 
 def setup():
     size(500,500)
-    frameRate(2)
-    distribute_food(100)
+    frameRate(20)
+    noStroke()
+    distribute_food(1000)
     render_matrix()
 
 
 def draw():
     global rpf
-    print(rpf)
+    #print(rpf)
     rpf = 0
-    #distribute_food(5)
-    #distributeBadgers(1)
+    distribute_food(5)
+    distributeBadgers(1)
     
     #print(getFoodChunk(10,10))
-    
+    render_matrix()
     run_ai()
     #print(tx,ty)
-    render_matrix()
+    
     pass
     
