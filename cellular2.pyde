@@ -15,6 +15,11 @@ def matrix2(x,y):
     out.append([0])
     
   return(out)
+#additional info
+# output on top left is in the format of (dandilion count, badger count, lion count)
+# this is the same as how the cells are colored, the (r ,g ,b) values are determed by (dandilion count, badger count, lion count)
+#
+# config
 w = 100 #width of matrix
 h = 100 #height of matrix
 
@@ -24,36 +29,43 @@ ph = 500 #height of display
 rx = pw/w #width of a grid square
 ry = ph/h #height of a grid square
 
+bdrate = 0 #badger death rate, higher number equals longer living badgers
+ldrate = 0 #same thing but for lions
 
-foodChunkWidth = 100
-foodChunkHeight = 100
+bstart = 100 #badger starting population
+lstart = 100 #lion starting population
+dstart = 100 #dandilion starting population
+
+#end of config
 
 
-cw = w/foodChunkWidth
-ch = h/foodChunkHeight
-foodC = matrix2(foodChunkWidth,foodChunkHeight)
+
+
 scene = matrix(w,h)
 searchR = 5
 
 
-rpf = 0
+rpf = 0 
+
+badger_count = 0 #variables used for count on top left of screen
+lion_count = 0
+dandelion_count = 0
 
 
 
-
-
-
-def getFoodChunk(x,y):
-    xpos = floor(x/cw)
-    ypos = floor(y/ch)
-    print(xpos,ypos)
+#distribution functions, they take in a count of a given species and distribute it randomly across the scene
+def distribute_food(amount):
+    global scene
+    for i in xrange(amount):
+        x = r.randint(0,w-1)
+        y = r.randint(0,h-1)
+        d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
+        
+        d += 1
+        
+        
+        scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)    
     
-    
-    
-    
-    
-    
-
 
 def distributeBadgers(amount):
     global scene
@@ -63,6 +75,7 @@ def distributeBadgers(amount):
         d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
         b += 1
         scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
+        
 def distributeLions(amount):
     global scene
     for i in range(amount):
@@ -71,9 +84,9 @@ def distributeLions(amount):
         d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
         l += 1
         scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
+#end of distribution functions
 
-
-def inr(x,y):
+def inr(x,y): #detects if a given matrix value is within the matrix, if it is not the given value that is out of range is set the the nearest in range value (ex in a 5x5 matrix (100,100) would be set to (4,4))
     if x > w-1:
         x = w-1
     if x < 0:
@@ -85,7 +98,7 @@ def inr(x,y):
     return(x,y)
 
 
-
+#search functions, they take in an x,y valueand preform a basic raster search
 def badger_search(x,y): #highly inefficient test search
     global scene
     closest = (None,None)
@@ -131,6 +144,9 @@ def badger_search(x,y): #highly inefficient test search
         mx = rpx/abs(rpx)
     if rpy != 0:    
         my = rpy/abs(rpy)
+    if rp == (0,0):
+        mx = r.randint(-1,1)
+        my = r.randint(-1,1)
     return(mx,my)
     
         
@@ -184,9 +200,12 @@ def lion_search(x,y): #highly inefficient test search
         mx = rpx/abs(rpx)
     if rpy != 0:    
         my = rpy/abs(rpy)
+    if rp == (0,0):
+        mx = r.randint(-1,1)
+        my = r.randint(-1,1)
     return(mx,my)
 
-
+#end of search functions
 
 
 
@@ -200,7 +219,7 @@ def badgerAI(x,y):
     #rect(x*rx,y*ry, 5,5)
     #rpf += 1
     d,b,l,db,bb,lb,v,ld,lab,ll= scene[x][y]
-    
+    k = False
     mx,my = badger_search(x,y)
     x1 = x + mx
     y1 = y + my
@@ -217,22 +236,29 @@ def badgerAI(x,y):
         if rc == 1:
             b += 1
         d-=1
-    scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
-    d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1 = scene[x1][y1]
-    
-    if x1 > x or y1 > y:
-        bb1 += 1
     else:
-        b1 += 1
-    #if v1 < v:
-    #    bb1 += 1
-    #else:
-     #   b1 += 1
+        rc = r.randint(0,100)
+        if rc == 1:
+            #b -= 1
+            k =  True
+   
+    scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
+    if k == False:
+        d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1 = scene[x1][y1]
         
-    #b1 += 1
-    
-    scene[x1][y1] = (d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1)
-    
+        if x1 > x or y1 > y:
+            bb1 += 1
+        else:
+            b1 += 1
+        #if v1 < v:
+        #    bb1 += 1
+        #else:
+        #   b1 += 1
+            
+        #b1 += 1
+        
+        scene[x1][y1] = (d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1)
+        
     
 
 
@@ -256,8 +282,8 @@ def LionAI(x,y):
     l -=1
     if b > 0:
         rc = r.randint(0,10)
-        if rc == 1:
-            l += 1
+        #if rc == 1:
+            #l += 1
         b-=1
     scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
     d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1 = scene[x1][y1]
@@ -275,20 +301,12 @@ def LionAI(x,y):
     
     scene[x1][y1] = (d1,b1,l1,db1,bb1,lb1,v1,ld1,lv1,ll1)
 
-def distribute_food(amount):
-    global scene
-    for i in xrange(amount):
-        x = r.randint(0,w-1)
-        y = r.randint(0,h-1)
-        d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
-        
-        d += 10
-        
-        
-        scene[x][y] = (d,b,l,db,bb,lb,v,ld,lab,ll)
+
         
         
 def render_matrix():
+    global badger_count, lion_count,dandelion_count
+
     for x in xrange(w):
         for y in xrange(h):
             d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
@@ -304,18 +322,17 @@ def render_matrix():
                     fill(255,0,0)
                 else:
                     fill(0)
-                
-                rect(x*rx,y*ry,rx,ry)
+            if (d < 0) or (b < 0) or (l < 0):
+                print("low")
+                fill(255,0,255)
+            
+            badger_count += b + bb
+            lion_count += l+ lb
+            dandelion_count += d + db
+            rect(x*rx,y*ry,rx,ry)
             
             
-def re_add_buffers(x,y):
-    global scene
-    d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
-    d += db
-    b += bb
-    l += lb
-    
-    scene[x][y] = (d,b,l,0,0,0,v,ld,lab,ll)
+
     
 def run_ai():
     global scene
@@ -325,6 +342,7 @@ def run_ai():
             ld = d+db
             lab = b+bb
             ll = l+lb
+            #print(b)
             
             for i in xrange(b):
                     badgerAI(x,y)
@@ -332,6 +350,9 @@ def run_ai():
                     LionAI(x,y)
                         #print(x,y)
             d,b,l,db,bb,lb,v,ld,lab,ll = scene[x][y]
+            if l != 0:
+                print(l)
+            
            # if b != 0:
             #    print(b)    
             #re_add_buffers(x,y)
@@ -367,8 +388,9 @@ def setup():
 
 
 def draw():
-    
-    global rpf
+    global badger_count, lion_count,dandelion_count
+
+    global rpf 
     #print(rpf)
     #background(0)
     #rpf = 0
@@ -381,8 +403,16 @@ def draw():
     
     #print(getFoodChunk(10,10))
     
+    
     run_ai()
     render_matrix()
+    fill(255,0,255)
+    rect(0,0,150,20 )
+    fill(0)
+    text(str( dandelion_count )+ "," + str( badger_count ) + "," + str(lion_count ) ,0,10)
+    badger_count = 0
+    lion_count = 0
+    dandelion_count = 0
     #print(tx,ty)
     
     pass
